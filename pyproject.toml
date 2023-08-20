@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vos_benchmark"
+version = "0.1.0"
+authors = [
+  { name="Rex Cheng", email="hkchengrex@gmail.com" },
+]
+description = "General multi-threaded benchmarking script for video object segmentation."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    'numpy',
+    'Pillow',
+    'tqdm',
+    'opencv-python',
+    'scikit-image',
+]
+
+[project.urls]
+"Homepage" = "https://github.com/hkchengrex/vos-benchmark"
+"Bug Tracker" = "https://github.com/hkchengrex/vos-benchmark/issues"
