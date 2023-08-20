@@ -1,11 +1,11 @@
 from setuptools import setup
 
 setup(
-    name='gmp_benchmark',
+    name='vos_benchmark',
     version='0.1.0',
     author='Rex Cheng',
     author_email='hkchengrex@gmail.com',
-    packages=['gmp_benchmark'],
+    packages=['vos_benchmark'],
     url='http://pypi.python.org/pypi/PackageName/',
     license='LICENSE',
     description='General multi-threaded benchmarking script for video object segmentation.',
