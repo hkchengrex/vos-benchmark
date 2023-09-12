@@ -62,7 +62,9 @@ TrackEval (a powerful tool with more functionalities): https://github.com/Jonath
 
 ### My video object segmentation projects:
 
-XMem, latest: https://github.com/hkchengrex/XMem
+DEVA (latest): https://github.com/hkchengrex/Tracking-Anything-with-DEVA
+
+XMem: https://github.com/hkchengrex/XMem
 
 STCN: https://github.com/hkchengrex/STCN
 
