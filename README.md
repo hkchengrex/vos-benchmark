@@ -37,8 +37,8 @@ A `results.csv` will be saved in the prediction directory.
 I built this tool to accelerate evaluations (J&F) on different video object segmentation benchmarks. Previously, [davis2017-evaluation](https://github.com/davisvideochallenge/davis2017-evaluation) is used, which has several limitations:
 
 - It is slow. Evaluating predictions on the validation set of DAVIS-2017 (30 videos) takes 73.3 seconds. It would take longer for any larger dataset. Ours takes 5.36 seconds (with 16 threads).
-- It is tailored to the DAVIS dataset. Evaluating other datasets (like converted OVIS, UVO, or the long video dataset) requires mocking them as DAVIS (setting up "split" text files and following a non-trivial file structure). We don't care. We just take the paths to two folders (ground-truth and predictions) as input.
-- It does not work with non-continuous object IDs. We do.
+- It is tailored to the DAVIS dataset. Evaluating other datasets (like converted OVIS, UVO, or the long video dataset) requires mocking them as DAVIS (setting up "split" text files and following DAVIS's file structure). We don't care. We just take the paths to two folders (ground-truth and predictions) as input.
+- It does not work with non-continuous object IDs. Ours does.
 
 I have tested this script on DAVIS-16/17 and confirmed that it produces identical results as the official evaluation script. 
 
