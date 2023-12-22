@@ -4,9 +4,11 @@ from vos_benchmark.benchmark import benchmark
 Data paths
 """
 parser = ArgumentParser()
-parser.add_argument('-g', '--gt', help='Path to a folder containing folders of ground-truth masks')
-parser.add_argument('-m',
-                    '--mask',
+parser.add_argument('-g', '--gt',
+                    nargs="*", default=[], type=str,
+                    help='Path to a folder containing folders of ground-truth masks')
+parser.add_argument('-m', '--mask',
+                    nargs="*", default=[], type=str,
                     help='Path to a folder containing folders of masks to be evaluated')
 parser.add_argument('-n',
                     '--num_processes',
@@ -29,8 +31,11 @@ parser.add_argument(
     action='store_true')
 args = parser.parse_args()
 
-benchmark([args.gt], [args.mask],
-          args.strict,
-          args.num_processes,
-          verbose=True,
-          skip_first_and_last=not args.do_not_skip_first_and_last_frame)
+benchmark(
+    gt_roots=args.gt,
+    mask_roots=args.mask,
+    strict=args.strict,
+    num_processes=args.num_processes,
+    verbose=True,
+    skip_first_and_last=not args.do_not_skip_first_and_last_frame
+)
