@@ -10,6 +10,9 @@ parser.add_argument('-g', '--gt',
 parser.add_argument('-m', '--mask',
                     nargs="*", default=[], type=str,
                     help='Path to a folder containing folders of masks to be evaluated')
+parser.add_argument('-v', '--video_names',
+                    nargs="*", default=[], type=str,
+                    help='Path to a txt containing videos to be evaluated')
 parser.add_argument('-n', '--num_processes',
                     default=16, type=int,
                     help='Number of concurrent processes')
@@ -33,6 +36,7 @@ args = parser.parse_args()
 benchmark(
     gt_roots=args.gt,
     mask_roots=args.mask,
+    video_names=args.video_names,
     strict=args.strict,
     overwrite=args.overwrite,
     num_processes=args.num_processes,
