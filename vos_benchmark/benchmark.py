@@ -1,5 +1,6 @@
 import os
 from os import path
+import pandas as pd
 import time
 from multiprocessing import Pool
 
@@ -50,6 +51,7 @@ class VideoEvaluator:
 def benchmark(gt_roots,
               mask_roots,
               strict=True,
+              overwrite=False,
               num_processes=None,
               *,
               verbose=True,
@@ -82,6 +84,20 @@ def benchmark(gt_roots,
 
     assert len(gt_roots) == len(mask_roots)
     single_dataset = (len(gt_roots) == 1)
+
+    # check if results.csv already exists, decide to skip or overwrite
+    skip_indices = []
+    for i in range(len(mask_roots)):
+        mask_root = mask_roots[i]
+        if path.exists(path.join(mask_root, 'results.csv')):
+            if not overwrite:
+                print(f'{mask_root}/results.csv already exists. Skipping.')
+                skip_indices.append(i)
+            else:
+                print(f'{mask_root}/results.csv already exists. But we will remove and overwrite it.')
+                os.remove(path.join(mask_root, 'results.csv'))
+    mask_roots = [mask_roots[i] for i in range(len(mask_roots)) if i not in skip_indices]
+    gt_roots = [gt_roots[i] for i in range(len(gt_roots)) if i not in skip_indices]
 
     if verbose:
         if skip_first_and_last:
