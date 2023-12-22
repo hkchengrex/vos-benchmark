@@ -17,7 +17,8 @@ pip install -e vos-benchmark
 (from the vos-benchmark root directory)
 
 ```bash
-python benchmark.py -g <path to ground-truth directory> -m <path to prediction directory> -n <number of processes, 16 by default>
+python benchmark.py -g <paths to ground-truth directory> -m <paths to prediction directory> -n <number of processes, 16 by default>
+# e.g. python benchmark.py -g /path/to/ground-truth1 /path/to/ground-truth2 -m /path/to/prediction1 /path/to/prediction2 -n 16
 ```
 
 ### Using it as a library:
@@ -48,8 +49,10 @@ We read the input masks using `Image.open` from PIL. Paletted png files and gray
 2. We determine the objects in a frame (ground-truth or prediction) with `np.unique`. If there are any types of antialiasing, blurring, smoothing, etc., that spawn new pixel values, this will not work.
 3. From the start of the video, we keep a list of all objects that are seen in either ground-truth or prediction. This is to support datasets where some ground-truth objects appear later in the frame. Predicting objects that are not in the ground-truth harms the final score.
 4. By default, we skip the first and the last frame during evaluation. This is in line with the standard semi-supervised video object segmentation evaluation protocol in DAVIS. This can be overridden by specifying `-d` or `--do_not_skip_first_and_last_frame`, or passing `skip_first_and_last=False` (if used as a package).
-5. By default, we don't care if all the videos in the ground-truth folder have corresponding predictions. This is to support datasets that contain videos from different splits (e.g., DAVIS puts train/val splits together) in a single folder. If the prediction only contains videos from the validation set, we would only evaluate those videos. This can be overridden by specifying `-s` or `--strict`, or passing `strict=True` (if used as a package). In the strict mode, an exception would be thrown if the sets of videos do not match.
-6. If a video is being evaluated, all the frames in the ground-truth folder must have corresponding predictions. Predictions that do not have corresponding ground-truths are simply ignored.
+5. You can pass text files by specifying `-v` or `--video_names` to indicate which videos to evaluate. The text files should contain the names of the videos (without the extension). The text files should contain same videos as the prediction folders and . The text files should have the same name as the prediction folders and be subset of ground-truth folders.
+6. If you don't pass the text files: By default, we don't care if all the videos in the ground-truth folder have corresponding predictions. This is to support datasets that contain videos from different splits (e.g., DAVIS puts train/val splits together) in a single folder. If the prediction only contains videos from the validation set, we would only evaluate those videos. This can be overridden by specifying `-s` or `--strict`, or passing `strict=True` (if used as a package). In the strict mode, an exception would be thrown if the sets of videos do not match.
+7. If a video is being evaluated, all the frames in the ground-truth folder must have corresponding predictions. Predictions that do not have corresponding ground-truths are simply ignored.
+8. If the `results.csv` file already exists in the prediction folder, it will be skipped. This is to prevent accidental overwriting. If you want to overwrite it, specify `-o` or `--overwrite`, or pass `overwrite=True` (if used as a package).
 
 ## Related projects:
 
