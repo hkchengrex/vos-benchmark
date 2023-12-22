@@ -1,6 +1,5 @@
 import os
 from os import path
-import pandas as pd
 import time
 from multiprocessing import Pool
 
@@ -77,6 +76,7 @@ def benchmark(gt_roots,
                 then it must at least contain all the masks in the ground truth annotations.
                 Masks that are in the prediction but not in the ground-truth
                 (i.e., sparse annotations) are ignored.
+    overwrite: whether overwrite existing results.csv
     skip_first_and_last: whether we should skip the first and the last frame in evaluation.
                             This is used by DAVIS 2017 in their semi-supervised evaluation.
                             It should be disabled for unsupervised evaluation.
