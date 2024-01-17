@@ -16,16 +16,23 @@ class VideoEvaluator:
     This returns metrics for a single video.
     """
 
-    def __init__(self, gt_root, mask_root, skip_first_and_last=True):
+    def __init__(self, gt_root, mask_root, skip_first_and_last=True, full_mask=True):
         self.gt_root = gt_root
         self.mask_root = mask_root
         self.skip_first_and_last = skip_first_and_last
+        self.full_mask = full_mask
 
     def __call__(self, vid_name):
         vid_gt_path = path.join(self.gt_root, vid_name)
         vid_mask_path = path.join(self.mask_root, vid_name)
+        if self.full_mask:
+            assert sorted(os.listdir(vid_gt_path)) == sorted(os.listdir(vid_mask_path)), "gt and mask not match"
+            frames = sorted(os.listdir(vid_gt_path))
+        else:
+            assert set(sorted(os.listdir(vid_gt_path))).issubset(set(sorted(os.listdir(vid_mask_path)))), \
+                f"additional mask: {set(sorted(os.listdir(vid_gt_path))) - set(sorted(os.listdir(vid_mask_path)))}"
+            frames = sorted(os.listdir(vid_mask_path))
 
-        frames = sorted(os.listdir(vid_gt_path))
         if self.skip_first_and_last:
             # the first and the last frames are skipped in DAVIS semi-supervised evaluation
             frames = frames[1:-1]
@@ -51,6 +58,7 @@ def benchmark(gt_roots,
               mask_roots,
               video_names,
               strict=True,
+              full_mask=True,
               overwrite=False,
               num_processes=None,
               *,
@@ -172,17 +180,17 @@ def benchmark(gt_roots,
         if single_dataset:
             if verbose:
                 results = tqdm.tqdm(pool.imap(
-                    VideoEvaluator(gt_root, mask_root, skip_first_and_last=skip_first_and_last),
+                    VideoEvaluator(gt_root, mask_root, skip_first_and_last=skip_first_and_last, full_mask=full_mask),
                     videos),
                                     total=len(videos))
             else:
                 results = pool.map(
-                    VideoEvaluator(gt_root, mask_root, skip_first_and_last=skip_first_and_last),
+                    VideoEvaluator(gt_root, mask_root, skip_first_and_last=skip_first_and_last, full_mask=full_mask),
                     videos)
         else:
             to_wait.append(
                 pool.map_async(
-                    VideoEvaluator(gt_root, mask_root, skip_first_and_last=skip_first_and_last),
+                    VideoEvaluator(gt_root, mask_root, skip_first_and_last=skip_first_and_last, full_mask=full_mask),
                     videos))
 
     pool.close()

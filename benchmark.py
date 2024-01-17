@@ -19,6 +19,9 @@ parser.add_argument('-n', '--num_processes',
 parser.add_argument('-s', '--strict',
                     help='Make sure every video in the ground-truth has a corresponding video in the prediction',
                     action='store_true')
+parser.add_argument('--not_full_mask',
+                    help='Some video not contains full mask',
+                    action='store_true')
 parser.add_argument('--overwrite',
                     help='Overwrite existing results',
                     action='store_true')
@@ -35,6 +38,7 @@ benchmark(
     mask_roots=args.mask,
     video_names=args.video_names,
     strict=args.strict,
+    full_mask=not args.not_full_mask,
     overwrite=args.overwrite,
     num_processes=args.num_processes,
     verbose=True,
