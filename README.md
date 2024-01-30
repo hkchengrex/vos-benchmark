@@ -62,10 +62,25 @@ TrackEval (a powerful tool with more functionalities): https://github.com/Jonath
 
 ### My video object segmentation projects:
 
-DEVA (latest): https://github.com/hkchengrex/Tracking-Anything-with-DEVA
+Cutie: https://github.com/hkchengrex/Cutie
+
+DEVA: https://github.com/hkchengrex/Tracking-Anything-with-DEVA
 
 XMem: https://github.com/hkchengrex/XMem
 
 STCN: https://github.com/hkchengrex/STCN
 
 MiVOS: https://github.com/hkchengrex/MiVOS
+
+
+### Citation
+
+This is part of the accompanying code of DEVA. You can cite this repository as:
+```bibtex
+@inproceedings{cheng2023tracking,
+  title={Tracking Anything with Decoupled Video Segmentation},
+  author={Cheng, Ho Kei and Oh, Seoung Wug and Price, Brian and Schwing, Alexander and Lee, Joon-Young},
+  booktitle={ICCV},
+  year={2023}
+}
+```
