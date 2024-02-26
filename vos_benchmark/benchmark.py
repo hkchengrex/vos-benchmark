@@ -16,16 +16,23 @@ class VideoEvaluator:
     This returns metrics for a single video.
     """
 
-    def __init__(self, gt_root, mask_root, skip_first_and_last=True):
+    def __init__(self, gt_root, mask_root, skip_first_and_last=True, full_mask=True):
         self.gt_root = gt_root
         self.mask_root = mask_root
         self.skip_first_and_last = skip_first_and_last
+        self.full_mask = full_mask
 
     def __call__(self, vid_name):
         vid_gt_path = path.join(self.gt_root, vid_name)
         vid_mask_path = path.join(self.mask_root, vid_name)
+        if self.full_mask:
+            assert sorted(os.listdir(vid_gt_path)) == sorted(os.listdir(vid_mask_path)), "gt and mask not match"
+            frames = sorted(os.listdir(vid_gt_path))
+        else:
+            assert set(sorted(os.listdir(vid_gt_path))).issubset(set(sorted(os.listdir(vid_mask_path)))), \
+                f"additional mask: {set(sorted(os.listdir(vid_gt_path))) - set(sorted(os.listdir(vid_mask_path)))}"
+            frames = sorted(os.listdir(vid_mask_path))
 
-        frames = sorted(os.listdir(vid_gt_path))
         if self.skip_first_and_last:
             # the first and the last frames are skipped in DAVIS semi-supervised evaluation
             frames = frames[1:-1]
@@ -49,7 +56,10 @@ class VideoEvaluator:
 
 def benchmark(gt_roots,
               mask_roots,
+              video_names,
               strict=True,
+              full_mask=True,
+              overwrite=False,
               num_processes=None,
               *,
               verbose=True,
@@ -68,20 +78,40 @@ def benchmark(gt_roots,
         DatasetB - 
             ...
     mask_roots: same as above, but the .png are masks predicted by the model
-    strict: when True, all videos in the dataset must have corresponding predictions.
+    video_names: a list of paths to text files, i.e., [path_to_DatasetA, path_to_DatasetB, ...],
+                each containing a list of video names to be evaluated.
+                If not provided, evaluated videos will depend on strict.
+    strict: only used when video_names is not provided.
+            when True, all videos in the dataset must have corresponding predictions.
             Setting it to False is useful in cases where the ground-truth contains both train/val
                 sets, but the model only predicts the val subset.
             Either way, if a video is predicted (i.e., the corresponding folder exists), 
                 then it must at least contain all the masks in the ground truth annotations.
                 Masks that are in the prediction but not in the ground-truth
                 (i.e., sparse annotations) are ignored.
+    overwrite: whether overwrite existing results.csv
     skip_first_and_last: whether we should skip the first and the last frame in evaluation.
                             This is used by DAVIS 2017 in their semi-supervised evaluation.
                             It should be disabled for unsupervised evaluation.
     """
 
-    assert len(gt_roots) == len(mask_roots)
+    assert len(gt_roots) == len(mask_roots) and (len(video_names) == 0 or len(video_names) == len(gt_roots))
     single_dataset = (len(gt_roots) == 1)
+
+    # check if results.csv already exists, decide to skip or overwrite
+    skip_indices = []
+    for i in range(len(mask_roots)):
+        mask_root = mask_roots[i]
+        if path.exists(path.join(mask_root, 'results.csv')):
+            if not overwrite:
+                print(f'{mask_root}/results.csv already exists. Skipping.')
+                skip_indices.append(i)
+            else:
+                print(f'{mask_root}/results.csv already exists. But we will remove and overwrite it.')
+                os.remove(path.join(mask_root, 'results.csv'))
+    mask_roots = [mask_roots[i] for i in range(len(mask_roots)) if i not in skip_indices]
+    gt_roots = [gt_roots[i] for i in range(len(gt_roots)) if i not in skip_indices]
+    video_names = [video_names[i] for i in range(len(video_names)) if i not in skip_indices] if len(video_names) > 0 else []
 
     if verbose:
         if skip_first_and_last:
@@ -96,7 +126,7 @@ def benchmark(gt_roots,
     pool = Pool(num_processes)
     start = time.time()
     to_wait = []
-    for gt_root, mask_root in zip(gt_roots, mask_roots):
+    for i, (gt_root, mask_root) in enumerate(zip(gt_roots, mask_roots)):
         #Validate folders
         validated = True
         gt_videos = os.listdir(gt_root)
@@ -113,7 +143,20 @@ def benchmark(gt_roots,
         gt_videos = list(filter(lambda x: path.isdir(path.join(gt_root, x)), gt_videos))
         mask_videos = list(filter(lambda x: path.isdir(path.join(mask_root, x)), mask_videos))
 
-        if not strict:
+        # read evaluated videos from text file or according to strict
+        if len(video_names) > 0:
+            with open(video_names[i], mode='r') as f:
+                video_name = set(f.read().splitlines())
+
+            if video_name != set(mask_videos):
+                print(f'Videos in {video_names[i]} do not match videos in {mask_root}.')
+                validated = False
+            if not video_name.issubset(set(gt_videos)):
+                print(f'Videos in {video_names[i]} are not in {gt_root}.')
+                validated = False
+
+            videos = sorted(list(video_name))
+        elif not strict:
             videos = sorted(list(set(gt_videos) & set(mask_videos)))
         else:
             gt_extras = set(gt_videos) - set(mask_videos)
@@ -125,11 +168,11 @@ def benchmark(gt_roots,
             if len(mask_extras) > 0:
                 print(f'Videos that are in {mask_root} but not in {gt_root}: {mask_extras}')
                 validated = False
-            if not validated:
-                print('Validation failed. Exiting.')
-                exit(1)
 
             videos = sorted(gt_videos)
+        if not validated:
+            print('Validation failed. Exiting.')
+            exit(1)
 
         if verbose:
             print(f'In dataset {gt_root}, we are evaluating on {len(videos)} videos: {videos}')
@@ -137,17 +180,17 @@ def benchmark(gt_roots,
         if single_dataset:
             if verbose:
                 results = tqdm.tqdm(pool.imap(
-                    VideoEvaluator(gt_root, mask_root, skip_first_and_last=skip_first_and_last),
+                    VideoEvaluator(gt_root, mask_root, skip_first_and_last=skip_first_and_last, full_mask=full_mask),
                     videos),
                                     total=len(videos))
             else:
                 results = pool.map(
-                    VideoEvaluator(gt_root, mask_root, skip_first_and_last=skip_first_and_last),
+                    VideoEvaluator(gt_root, mask_root, skip_first_and_last=skip_first_and_last, full_mask=full_mask),
                     videos)
         else:
             to_wait.append(
                 pool.map_async(
-                    VideoEvaluator(gt_root, mask_root, skip_first_and_last=skip_first_and_last),
+                    VideoEvaluator(gt_root, mask_root, skip_first_and_last=skip_first_and_last, full_mask=full_mask),
                     videos))
 
     pool.close()
